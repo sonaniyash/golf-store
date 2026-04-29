@@ -1,4 +1,22 @@
 {{ 'section-image-banner.css' | asset_url | stylesheet_tag }}
+{{ 'flickity.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'flickity.pkgd.min.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign slider_images = 'slider/1.webp|slider/2.jpg|slider/3.jpg|slider/4.jpg' | split: '|'
+
+  case section.settings.image_height
+    when 'small'
+      assign banner_height_mobile = '66vh'
+      assign banner_height_desktop = '86vh'
+    when 'large'
+      assign banner_height_mobile = '92vh'
+      assign banner_height_desktop = '119vh'
+    else
+      assign banner_height_mobile = '79vh'
+      assign banner_height_desktop = '106vh'
+  endcase
+-%}
 
 {%- if section.settings.image_height == 'adapt' and section.settings.image != blank -%}
   {%- style -%}
@@ -27,131 +45,115 @@
   #Banner-{{ section.id }}::after {
     opacity: {{ section.settings.image_overlay_opacity | divided_by: 100.0 }};
   }
-{%- endstyle -%}
 
-{%- liquid
-  if section.settings.image_behavior == 'ambient'
-    assign half_width = '60vw'
-    assign full_width = '120vw'
-    assign stacked_sizes = '(min-width: 750px) 60vw, 120vw'
-    assign widths = '450, 660, 900, 1320, 1800, 2136, 2400, 3600, 7680'
-  else
-    assign half_width = '50vw'
-    assign full_width = '100vw'
-    assign stacked_sizes = '(min-width: 750px) 50vw, 100vw'
-    assign widths = '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840'
-  endif
--%}
+  #Banner-{{ section.id }} {
+    width: 100%;
+  }
+
+  #Banner-{{ section.id }} .banner__carousel {
+    width: 100%;
+  }
+
+  #Banner-{{ section.id }} .banner__carousel-cell {
+    width: 100%;
+    min-height: {{ banner_height_mobile }};
+  }
+
+  #Banner-{{ section.id }} .banner__carousel-cell .banner__media {
+    position: relative;
+    width: 100%;
+    min-height: inherit;
+    height: 100%;
+  }
+
+  #Banner-{{ section.id }} .banner__carousel-cell img,
+  #Banner-{{ section.id }} .banner__carousel-cell .placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media screen and (min-width: 750px) {
+    #Banner-{{ section.id }} .banner__carousel-cell {
+      min-height: {{ banner_height_desktop }};
+    }
+  }
+
+  #Banner-{{ section.id }} .flickity-page-dots {
+    bottom: 2rem;
+  }
+{%- endstyle -%}
 
 <div
   id="Banner-{{ section.id }}"
   class="banner banner--content-align-{{ section.settings.desktop_content_alignment }} banner--content-align-mobile-{{ section.settings.mobile_content_alignment }} banner--{{ section.settings.image_height }}{% if section.settings.stack_images_on_mobile and section.settings.image != blank and section.settings.image_2 != blank %} banner--stacked{% endif %}{% if section.settings.image_height == 'adapt' and section.settings.image != blank %} banner--adapt{% endif %}{% if section.settings.show_text_below %} banner--mobile-bottom{%- endif -%}{% if section.settings.show_text_box == false %} banner--desktop-transparent{% endif %}"
 >
-  {%- if section.settings.image != blank -%}
-    <div class="banner__media media{% if section.settings.image == blank and section.settings.image_2 == blank %} placeholder{% endif %}{% if section.settings.image_2 != blank %} banner__media-half{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}">
-      {%- liquid
-        assign image_height = section.settings.image.width | divided_by: section.settings.image.aspect_ratio
-        if section.settings.image_2 != blank
-          assign image_class = 'banner__media-image-half'
-        endif
-        if section.settings.image_2 != blank and section.settings.stack_images_on_mobile
-          assign sizes = stacked_sizes
-        elsif section.settings.image_2 != blank
-          assign sizes = half_width
-        else
-          assign sizes = full_width
-        endif
-      -%}
-      {{
-        section.settings.image
-        | image_url: width: 3840
-        | image_tag:
-          loading: 'lazy',
-          width: section.settings.image.width,
-          height: image_height,
-          class: image_class,
-          sizes: sizes,
-          widths: widths
-      }}
-    </div>
-  {%- elsif section.settings.image_2 == blank -%}
-    <div class="banner__media media{% if section.settings.image == blank and section.settings.image_2 == blank %} placeholder{% endif %}{% if section.settings.image_2 != blank %} banner__media-half{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}">
-      {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
-    </div>
-  {%- endif -%}
-  {%- if section.settings.image_2 != blank -%}
-    <div class="banner__media media{% if section.settings.image != blank %} banner__media-half{% endif %}{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}">
-      {%- liquid
-        assign image_height_2 = section.settings.image_2.width | divided_by: section.settings.image_2.aspect_ratio
-        if section.settings.image != blank
-          assign image_class_2 = 'banner__media-image-half'
-        endif
-        if section.settings.image != blank and section.settings.stack_images_on_mobile
-          assign sizes = stacked_sizes
-        elsif section.settings.image_2 != blank
-          assign sizes = half_width
-        else
-          assign sizes = full_width
-        endif
-      -%}
-      {{
-        section.settings.image_2
-        | image_url: width: 3840
-        | image_tag:
-          loading: 'lazy',
-          width: section.settings.image_2.width,
-          height: image_height_2,
-          class: image_class_2,
-          sizes: sizes,
-          widths: widths
-      }}
-    </div>
-  {%- endif -%}
-  <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
-    <div class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient">
-      {%- for block in section.blocks -%}
-        {%- case block.type -%}
-          {%- when 'heading' -%}
-            <h2 class="banner__heading inline-richtext {{ block.settings.heading_size }}" {{ block.shopify_attributes }}>{{ block.settings.heading }}</h2>
-          {%- when 'text' -%}
-            <div class="banner__text rte {{ block.settings.text_style }}" {{ block.shopify_attributes }}>
-              <p>{{ block.settings.text }}</p>
-            </div>
-          {%- when 'buttons' -%}
-            <div
-              class="banner__buttons{% if block.settings.button_label_1 != blank and block.settings.button_label_2 != blank %} banner__buttons--multiple{% endif %}"
-              {{ block.shopify_attributes }}
-            >
-              {%- if block.settings.button_label_1 != blank -%}
-                <a
-                  {% if block.settings.button_link_1 == blank %}
-                    role="link" aria-disabled="true"
-                  {% else %}
-                    href="{{ block.settings.button_link_1 }}"
-                  {% endif %}
-                  class="button{% if block.settings.button_style_secondary_1 %} button--secondary{% else %} button--primary{% endif %}"
-                >
-                  {{- block.settings.button_label_1 | escape -}}
-                </a>
-              {%- endif -%}
-              {%- if block.settings.button_label_2 != blank -%}
-                <a
-                  {% if block.settings.button_link_2 == blank %}
-                    role="link" aria-disabled="true"
-                  {% else %}
-                    href="{{ block.settings.button_link_2 }}"
-                  {% endif %}
-                  class="button{% if block.settings.button_style_secondary_2 %} button--secondary{% else %} button--primary{% endif %}"
-                >
-                  {{- block.settings.button_label_2 | escape -}}
-                </a>
-              {%- endif -%}
-            </div>
-        {%- endcase -%}
-      {%- endfor -%}
-    </div>
+  <div
+    class="banner__carousel"
+    data-flickity-banner
+    data-section-id="{{ section.id }}"
+  >
+    {%- for image_path in slider_images -%}
+      <div class="banner__carousel-cell">
+        <div class="banner__media media{% if section.settings.image_behavior != 'none' %} animate--{{ section.settings.image_behavior }}{% endif %}">
+          {%- assign image_name = image_path | split: '/' | last -%}
+          <img
+            src="{{ image_path | asset_url }}"
+            alt="{{ image_name | split: '.' | first | escape }}"
+            loading="lazy"
+            width="1920"
+            height="1080"
+          >
+        </div>
+      </div>
+    {%- endfor -%}
+
+    {%- if slider_images.size == 0 -%}
+      <div class="banner__carousel-cell">
+        <div class="banner__media media placeholder">
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
+        </div>
+      </div>
+    {%- endif -%}
   </div>
 </div>
+
+<script>
+  (function () {
+    function initBannerCarousel(sectionId) {
+      var selector = '[data-flickity-banner][data-section-id="' + sectionId + '"]';
+      var carouselElement = document.querySelector(selector);
+      if (!carouselElement || typeof Flickity === 'undefined') return;
+
+      if (carouselElement.flickityInstance) {
+        carouselElement.flickityInstance.destroy();
+      }
+
+      carouselElement.flickityInstance = new Flickity(carouselElement, {
+        cellAlign: 'left',
+        contain: false,
+        wrapAround: true,
+        prevNextButtons: false,
+        pageDots: true,
+        adaptiveHeight: true,
+        autoPlay: 5000,
+        pauseAutoPlayOnHover: false
+      });
+    }
+
+    function onReady() {
+      initBannerCarousel('{{ section.id }}');
+    }
+
+    document.addEventListener('DOMContentLoaded', onReady);
+    document.addEventListener('shopify:section:load', function (event) {
+      if (event.detail && event.detail.sectionId === '{{ section.id }}') {
+        initBannerCarousel('{{ section.id }}');
+      }
+    });
+  })();
+</script>
 
 {% schema %}
 {

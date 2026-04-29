@@ -92,6 +92,30 @@
 </style>
 
 {%- style -%}
+  {%- if request.page_type == 'index' -%}
+    .section-header {
+      margin-bottom: calc(-1 * var(--header-height, 8rem)) !important;
+    }
+
+    .header-wrapper--home-overlay {
+      background-color: transparent;
+      transition: background-color 0.35s ease;
+    }
+
+    .section-header.scrolled-past-header .header-wrapper--home-overlay,
+    .section-header:hover .header-wrapper--home-overlay {
+      background-color: rgba(0, 0, 0, 0.92);
+    }
+
+    .header-wrapper--home-overlay .header__heading-link,
+    .header-wrapper--home-overlay .header__menu-item,
+    .header-wrapper--home-overlay .header__icon,
+    .header-wrapper--home-overlay .link,
+    .header-wrapper--home-overlay .localization-form__select {
+      color: rgb(255, 255, 255);
+    }
+  {%- endif -%}
+
   .header {
     padding-top: {{ section.settings.padding_top | times: 0.5 | round: 0 }}px;
     padding-bottom: {{ section.settings.padding_bottom | times: 0.5 | round: 0 }}px;
@@ -149,9 +173,21 @@
       assign has_app_block = true
     endif
   endfor
+
+  assign header_wrapper_classes = 'header-wrapper color-' | append: section.settings.color_scheme | append: ' gradient'
+  if section.settings.show_line_separator
+    assign header_wrapper_classes = header_wrapper_classes | append: ' header-wrapper--border-bottom'
+  endif
+  if request.page_type == 'index'
+    assign header_wrapper_classes = header_wrapper_classes | append: ' header-wrapper--home-overlay'
+  endif
 -%}
 
-<{% if section.settings.sticky_header_type != 'none' %}sticky-header data-sticky-type="{{ section.settings.sticky_header_type }}"{% else %}div{% endif %} class="header-wrapper color-{{ section.settings.color_scheme }} gradient{% if section.settings.show_line_separator %} header-wrapper--border-bottom{% endif %}">
+{% if section.settings.sticky_header_type != 'none' %}
+  <sticky-header data-sticky-type="{{ section.settings.sticky_header_type }}" class="{{ header_wrapper_classes }}">
+{% else %}
+  <div class="{{ header_wrapper_classes }}">
+{% endif %}
   <header class="header header--{{ section.settings.logo_position }} header--mobile-{{ section.settings.mobile_logo_position }} page-width{% if section.settings.menu_type_desktop == 'drawer' %} drawer-menu{% endif %}{% if section.settings.menu != blank %} header--has-menu{% endif %}{% if has_app_block %} header--has-app{% endif %}">
     {%- if section.settings.menu != blank -%}
       <header-drawer data-breakpoint="{% if section.settings.menu_type_desktop == 'drawer' %}desktop{% else %}tablet{% endif %}">
@@ -739,7 +775,11 @@
       </a>
     </div>
   </header>
-</{% if section.settings.sticky_header_type != 'none' %}sticky-header{% else %}div{% endif %}>
+{% if section.settings.sticky_header_type != 'none' %}
+  </sticky-header>
+{% else %}
+  </div>
+{% endif %}
 
 {%- if settings.cart_type == "notification" -%}
   {%- render 'cart-notification', color_scheme: section.settings.color_scheme, desktop_menu_type: section.settings.menu_type_desktop -%}
